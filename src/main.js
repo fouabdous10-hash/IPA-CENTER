@@ -1,125 +1,73 @@
-import JSZip from "jszip";
-import "./style.css";
+import JSZip from 'jszip';
+import './style.css';
 
-const input = document.querySelector("#ipa-input");
-const importPanel = document.querySelector("#import-panel");
-const librarySection = document.querySelector("#library-section");
-const resultCard = document.querySelector("#result-card");
-const emptyState = document.querySelector("#empty-state");
-const appGrid = document.querySelector("#app-grid");
-const appCount = document.querySelector("#app-count");
-const dropzone = document.querySelector("#dropzone");
+const picker = document.querySelector('#ipaFile');
+const result = document.querySelector('#result');
+let currentFile = null;
 
-const apps = [];
-
-function openPicker() {
-  input.click();
-}
-["hero-import", "small-import", "empty-import", "nav-import"].forEach(id => {
-  document.getElementById(id).addEventListener("click", () => {
-    importPanel.classList.add("visible");
-    librarySection.scrollIntoView({ behavior: "smooth", block: "start" });
-    openPicker();
-  });
-});
-document.getElementById("nav-library").addEventListener("click", () => {
-  importPanel.classList.remove("visible");
-  librarySection.scrollIntoView({ behavior: "smooth" });
-});
-dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("dragover"); });
-dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
-dropzone.addEventListener("drop", e => {
-  e.preventDefault();
-  dropzone.classList.remove("dragover");
-  const file = [...e.dataTransfer.files].find(f => f.name.toLowerCase().endsWith(".ipa"));
-  if (file) inspectIPA(file);
-  else showError("Selecciona un archivo con extensión .ipa.");
-});
-input.addEventListener("change", () => {
-  const file = input.files?.[0];
-  if (file) inspectIPA(file);
-  input.value = "";
-});
-
-function xmlValue(xml, key) {
-  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = xml.match(new RegExp(`<key>\\s*${escaped}\\s*</key>\\s*<(?:string|integer)>\\s*([^<]*)`, "i"));
-  return match ? match[1].trim() : "";
-}
-
-async function inspectIPA(file) {
-  resultCard.hidden = false;
-  resultCard.innerHTML = `<div class="loading"><span class="spinner"></span><div><b>Analizando ${escapeHTML(file.name)}</b><small>Leyendo el contenido localmente…</small></div></div>`;
+picker.addEventListener('change', async () => {
+  const file = picker.files?.[0];
+  if (!file) return;
+  currentFile = file;
+  result.className = 'panel';
+  result.innerHTML = '<p>Analizando el archivo localmente…</p>';
   try {
     const zip = await JSZip.loadAsync(file);
-    const entries = Object.keys(zip.files).filter(name => !zip.files[name].dir);
-    const plistPath = entries.find(name => /^Payload\/[^/]+\.app\/Info\.plist$/i.test(name));
-    let bundleName = file.name.replace(/\.ipa$/i, "");
-    let version = "No disponible";
-    let bundleId = "No disponible";
-    let iconPath = "";
-    let plistReadable = false;
-
-    if (plistPath) {
-      const plistText = await zip.file(plistPath).async("string");
-      if (plistText.includes("<plist") && plistText.includes("<dict>")) {
-        plistReadable = true;
-        bundleName = xmlValue(plistText, "CFBundleDisplayName") || xmlValue(plistText, "CFBundleName") || bundleName;
-        version = xmlValue(plistText, "CFBundleShortVersionString") || xmlValue(plistText, "CFBundleVersion") || version;
-        bundleId = xmlValue(plistText, "CFBundleIdentifier") || bundleId;
-        const iconEntry = entries.find(name => /^Payload\/[^/]+\.app\/(AppIcon[^/]*\.(png|jpg)|[^/]*Icon[^/]*\.png)$/i.test(name));
-        if (iconEntry) iconPath = iconEntry;
-      }
-    }
-
-    const payloadPresent = entries.some(name => /^Payload\/[^/]+\.app\//i.test(name));
-    const signaturePresent = entries.some(name => /^Payload\/[^/]+\.app\/_CodeSignature\/CodeResources$/i.test(name));
-    const record = { file, name: bundleName, version, bundleId, entries: entries.length, payloadPresent, signaturePresent, plistReadable, iconPath, zip };
-    apps.unshift(record);
-    renderLibrary();
-    renderResult(record);
+    const entries = Object.keys(zip.files);
+    const appPath = entries.find(p => /^Payload\/[^/]+\.app\/Info\.plist$/i.test(p));
+    const appRoot = appPath ? appPath.replace(/Info\.plist$/i, '') : null;
+    const plistText = appPath ? await zip.file(appPath).async('string') : '';
+    const getValue = key => {
+      const re = new RegExp('<key>\\s*' + key + '\\s*</key>\\s*<string>([\\s\\S]*?)</string>', 'i');
+      const m = plistText.match(re);
+      return m ? m[1].replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>') : '';
+    };
+    const name = getValue('CFBundleDisplayName') || getValue('CFBundleName') || 'Desconocido';
+    const bundle = getValue('CFBundleIdentifier') || 'No leído';
+    const version = getValue('CFBundleShortVersionString') || 'No leída';
+    const build = getValue('CFBundleVersion') || 'No leído';
+    const binaryPlist = appPath && plistText.includes('bplist');
+    const hasPayload = entries.some(p => /^Payload\/[^/]+\.app\//i.test(p));
+    const hasSignatureFiles = entries.some(p => /_CodeSignature\/CodeResources$/i.test(p));
+    const hasProvision = entries.some(p => /embedded\.mobileprovision$/i.test(p));
+    const isGta = /gta/i.test(name) || /playgta5ios/i.test(bundle);
+    const plistStatus = appPath ? (binaryPlist ? 'Info.plist binario: datos no interpretados' : 'Info.plist XML encontrado') : 'No se encontró Payload/*.app/Info.plist';
+    result.innerHTML = `
+      <div class="eyebrow">IPA ANALIZADO</div>
+      <h2>${escapeHtml(name)}</h2>
+      <p>${isGta ? 'Se ha reconocido una app cuyo nombre o identificador contiene referencias a GTA.' : 'Archivo IPA leído correctamente.'}</p>
+      <div class="meta">
+        <div><small>Identificador</small><strong>${escapeHtml(bundle)}</strong></div>
+        <div><small>Versión</small><strong>${escapeHtml(version)}</strong></div>
+        <div><small>Build</small><strong>${escapeHtml(build)}</strong></div>
+        <div><small>Entradas del archivo</small><strong>${entries.length}</strong></div>
+      </div>
+      <h3>Comprobaciones</h3>
+      <div class="checks">
+        <div class="check ${hasPayload?'good':'bad'}">${hasPayload?'✓':'✕'} Estructura Payload ${hasPayload?'encontrada':'no encontrada'}</div>
+        <div class="check ${appPath?'good':'warn'}">${appPath?'✓':'!'} ${escapeHtml(plistStatus)}</div>
+        <div class="check ${hasSignatureFiles?'warn':'bad'}">${hasSignatureFiles?'! Se encontró CodeResources (no valida la firma)':'✕ No se encontró CodeResources'}</div>
+        <div class="check ${hasProvision?'warn':'warn'}">${hasProvision?'! Se encontró un perfil embedded.mobileprovision (no se ha validado)':'! No se encontró embedded.mobileprovision'}</div>
+        <div class="check warn">! Compatibilidad iOS y validez criptográfica: no verificadas</div>
+      </div>
+      <p><b>Resultado:</b> ${binaryPlist ? 'El archivo contiene un Info.plist binario que este comprobador no interpreta.' : 'La lectura de metadatos no demuestra que el IPA pueda instalarse.'} No se puede confirmar la instalación desde el navegador.</p>
+      <div class="actions">
+        <button class="btn" id="download">Descargar IPA original</button>
+        <button class="btn secondary" id="again">Importar otro</button>
+      </div>`;
+    document.querySelector('#download').addEventListener('click', () => downloadFile(file));
+    document.querySelector('#again').addEventListener('click', () => picker.click());
   } catch (err) {
-    showError("No se ha podido leer este archivo como un paquete ZIP/IPA válido. Comprueba que la descarga esté completa.");
+    result.innerHTML = `<h2>No se pudo leer el IPA</h2><p>${escapeHtml(err.message || 'Archivo ZIP/IPA no válido.')}</p>`;
   }
-}
+});
 
-function renderResult(app) {
-  resultCard.hidden = false;
-  resultCard.innerHTML = `
-    <div class="result-top"><div><div class="eyebrow">IMPORTACIÓN COMPLETADA</div><h3>${escapeHTML(app.name)}</h3><small>${escapeHTML(app.file.name)}</small></div><span class="success-pill">Importado</span></div>
-    <div class="details-grid">
-      <div><small>Versión</small><b>${escapeHTML(app.version)}</b></div>
-      <div><small>Identificador</small><b>${escapeHTML(app.bundleId)}</b></div>
-      <div><small>Archivos leídos</small><b>${app.entries.toLocaleString("es-ES")}</b></div>
-      <div><small>Estructura Payload</small><b>${app.payloadPresent ? "Detectada" : "No detectada"}</b></div>
-    </div>
-    <div class="notice"><b>Importante sobre la instalación</b><p>La importación solo permite consultar y descargar el archivo. La presencia de archivos de firma no demuestra que la firma sea válida ni que la app sea compatible o instalable en tu iPhone.</p></div>
-    <button class="primary-btn download-btn" id="download-original">↓ Descargar IPA original</button>
-  `;
-  document.getElementById("download-original").addEventListener("click", () => {
-    const url = URL.createObjectURL(app.file);
-    const a = document.createElement("a");
-    a.href = url; a.download = app.file.name; a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-  });
+function downloadFile(file) {
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a');
+  a.href = url; a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
-
-function renderLibrary() {
-  appCount.textContent = apps.length;
-  emptyState.hidden = apps.length > 0;
-  appGrid.innerHTML = apps.map((app, index) => `
-    <article class="app-card">
-      <div class="app-icon">${escapeHTML((app.name || "IPA").slice(0, 3).toUpperCase())}</div>
-      <div class="app-card-info"><b>${escapeHTML(app.name)}</b><small>${escapeHTML(app.version)} · IPA</small></div>
-      <button class="more-btn" data-index="${index}" aria-label="Ver detalles">···</button>
-    </article>`).join("");
-  appGrid.querySelectorAll(".more-btn").forEach(button => button.addEventListener("click", () => renderResult(apps[Number(button.dataset.index)])));
-}
-
-function showError(message) {
-  resultCard.hidden = false;
-  resultCard.innerHTML = `<div class="error-message"><b>No se pudo importar</b><p>${escapeHTML(message)}</p></div>`;
-}
-function escapeHTML(value) {
-  return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }

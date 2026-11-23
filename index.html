@@ -3,77 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#10131d">
-  <meta name="description" content="IPA CENTER - Importa y consulta archivos IPA localmente en tu dispositivo.">
+  <meta name="theme-color" content="#100d1d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IPA CENTER">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon.svg">
   <title>IPA CENTER</title>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <a class="brand" href="#" aria-label="IPA CENTER inicio">
-        <span class="brand-mark">IPA</span>
-        <span>IPA <b>CENTER</b></span>
-      </a>
-      <div class="side-label">BIBLIOTECA</div>
-      <button class="nav-item active" id="nav-library"><span>▦</span> Mis aplicaciones</button>
-      <div class="side-label side-label-lower">HERRAMIENTAS</div>
-      <button class="nav-item" id="nav-import"><span>＋</span> Importar IPA</button>
-      <div class="sidebar-bottom">
-        <div class="privacy-dot"></div>
-        <div><strong>Procesamiento local</strong><small>Los archivos no se envían a un servidor.</small></div>
-      </div>
-    </aside>
-
-    <main class="main">
-      <header class="topbar">
-        <div class="mobile-brand"><span class="brand-mark">IPA</span><b>IPA CENTER</b></div>
-        <span class="top-tag">APP LIBRARY <i></i></span>
-      </header>
-
+  <div id="app">
+    <header class="top"><div class="brand"><div class="logo">IPA</div><div><b>IPA CENTER</b><small>IPA library & checker</small></div></div><span class="pill">iOS tools</span></header>
+    <main>
       <section class="hero">
-        <div class="hero-copy">
-          <div class="eyebrow">TU BIBLIOTECA DE APPS</div>
-          <h1>Todo tu contenido<br><span>IPA en un solo lugar.</span></h1>
-          <p>Importa un archivo desde Archivos en tu iPhone o desde tu ordenador para consultar la información del paquete.</p>
-          <button class="primary-btn" id="hero-import"><span>＋</span> Importar archivo IPA</button>
-        </div>
-        <div class="hero-art" aria-hidden="true">
-          <div class="orb orb-one"></div><div class="orb orb-two"></div>
-          <div class="app-tile"><div class="tile-symbol">IPA</div><div class="tile-line"></div><div class="tile-line short"></div></div>
-          <div class="floating-chip">.IPA</div>
-        </div>
+        <span class="eyebrow">YOUR APP LIBRARY</span>
+        <h1>Importa y comprueba<br><span>tus archivos IPA</span></h1>
+        <p>Analiza la estructura del archivo y consulta los datos de la aplicación antes de intentar instalarla.</p>
+        <label class="upload" for="ipaFile"><span class="plus">＋</span><strong>Importar archivo IPA</strong><small>Selecciona un archivo .ipa desde Archivos</small></label>
+        <input id="ipaFile" type="file" accept=".ipa,application/octet-stream" hidden>
       </section>
-
-      <section class="library-section" id="library-section">
-        <div class="section-heading">
-          <div><div class="eyebrow">COLECCIÓN PERSONAL</div><h2>Mis aplicaciones <span id="app-count">0</span></h2></div>
-          <button class="secondary-btn" id="small-import">＋ Importar</button>
-        </div>
-        <div id="empty-state" class="empty-state">
-          <div class="empty-icon">⇧</div>
-          <h3>Tu biblioteca está vacía</h3>
-          <p>Selecciona un archivo .ipa para empezar. En iPhone se abrirá el selector de la app Archivos.</p>
-          <button class="secondary-btn" id="empty-import">Seleccionar archivo</button>
-        </div>
-        <div id="app-grid" class="app-grid"></div>
-      </section>
-
-      <section class="import-panel" id="import-panel">
-        <div class="section-heading"><div><div class="eyebrow">IMPORTACIÓN LOCAL</div><h2>Importar aplicación</h2></div></div>
-        <label class="dropzone" id="dropzone" for="ipa-input">
-          <div class="upload-icon">⇧</div>
-          <strong>Selecciona tu archivo IPA</strong>
-          <span>En iPhone, toca aquí y elige el archivo desde Archivos</span>
-          <em>Compatible con archivos .ipa</em>
-          <span class="choose-btn">Elegir archivo</span>
-          <input id="ipa-input" type="file" accept=".ipa,application/octet-stream">
-        </label>
-        <p class="privacy-note"><span>●</span> El análisis se realiza en este navegador. El archivo no se carga a IPA CENTER ni a Render.</p>
-        <div class="result-card" id="result-card" hidden></div>
-      </section>
-
-      <footer>IPA CENTER <span>·</span> Importación y análisis local de paquetes</footer>
+      <section id="result" class="panel empty"><div class="empty-icon">⌁</div><h2>Tu biblioteca está vacía</h2><p>Importa un IPA para ver sus datos y comprobaciones.</p></section>
+      <section class="notice"><b>Importante sobre la instalación</b><p>Importar o descargar un IPA no instala la aplicación. La presencia de archivos de firma tampoco demuestra que la firma sea válida. iOS requiere una firma válida y un método de distribución autorizado. Esta web no firma aplicaciones ni evita las protecciones de Apple.</p></section>
+      <section class="install-help"><h3>¿Quieres poner IPA CENTER en tu pantalla de inicio?</h3><p>En Safari, pulsa Compartir → Añadir a pantalla de inicio.</p></section>
     </main>
+    <footer>IPA CENTER · Análisis local en tu navegador</footer>
   </div>
   <script type="module" src="/src/main.js"></script>
 </body>
