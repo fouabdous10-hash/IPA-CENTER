@@ -1,43 +1,78 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#090d18" />
-  <meta name="description" content="IPA CENTER - Analizador local de paquetes IPA y APK." />
-  <title>IPA CENTER — App Package Manager</title>
-  <link rel="stylesheet" href="/src/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10131d">
+  <meta name="description" content="IPA CENTER - Importa y consulta archivos IPA localmente en tu dispositivo.">
+  <title>IPA CENTER</title>
 </head>
 <body>
-  <div id="app">
+  <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="#"><span class="brand-mark">⬡</span><span>IPA <b>CENTER</b><small>APP PACKAGE MANAGER</small></span></a>
-      <div class="nav-label">WORKSPACE</div>
-      <button class="nav active" data-view="dashboard">▦ <span>Panel principal</span></button>
-      <button class="nav" data-view="analyzer">⌕ <span>Analizador</span></button>
-      <button class="nav" data-view="library">▤ <span>Mi biblioteca</span></button>
-      <div class="side-note"><span class="dot"></span> Procesamiento local<br><small>Tus archivos no se suben a un servidor.</small></div>
-      <div class="side-bottom">IPA CENTER <span>v1.0.0</span></div>
+      <a class="brand" href="#" aria-label="IPA CENTER inicio">
+        <span class="brand-mark">IPA</span>
+        <span>IPA <b>CENTER</b></span>
+      </a>
+      <div class="side-label">BIBLIOTECA</div>
+      <button class="nav-item active" id="nav-library"><span>▦</span> Mis aplicaciones</button>
+      <div class="side-label side-label-lower">HERRAMIENTAS</div>
+      <button class="nav-item" id="nav-import"><span>＋</span> Importar IPA</button>
+      <div class="sidebar-bottom">
+        <div class="privacy-dot"></div>
+        <div><strong>Procesamiento local</strong><small>Los archivos no se envían a un servidor.</small></div>
+      </div>
     </aside>
+
     <main class="main">
-      <header class="topbar"><div><span class="eyebrow">APP MANAGEMENT / HOME</span><h1 id="page-title">Panel principal</h1></div><div class="top-right"><span class="secure">◈ Procesamiento en tu dispositivo</span><button class="icon-btn" id="themeBtn" title="Cambiar tema">◐</button></div></header>
-      <section id="dashboard" class="view">
-        <div class="hero"><div class="hero-copy"><span class="pill">PLATAFORMA MULTIDISPOSITIVO</span><h2>Gestiona tus paquetes.<br><em>Conoce lo que instalas.</em></h2><p>Importa paquetes IPA de iOS o APK de Android para inspeccionar su estructura y consultar los metadatos disponibles.</p><button class="primary" id="heroUpload">＋ Importar archivo</button></div><div class="hero-art"><div class="orb"></div><div class="file-card"><span>▧</span><b>APP PACKAGE</b><small>IPA · APK</small><strong>◎</strong></div></div></div>
-        <div class="stats"><article><span>FORMATOS</span><b>02</b><small>IPA y APK</small></article><article><span>ARCHIVOS ANALIZADOS</span><b id="count">0</b><small>En esta sesión</small></article><article><span>ALMACENAMIENTO</span><b>LOCAL</b><small>Sin subir archivos</small></article></div>
-        <div class="section-head"><div><span class="eyebrow">GET STARTED</span><h2>Herramientas</h2></div></div>
-        <div class="tool-grid"><button class="tool-card" id="toolIpa"><span class="tool-icon purple"></span><b>Analizar IPA</b><small>Paquetes de aplicaciones iOS</small><span class="arrow">↗</span></button><button class="tool-card" id="toolApk"><span class="tool-icon green">▣</span><b>Analizar APK</b><small>Paquetes de aplicaciones Android</small><span class="arrow">↗</span></button><button class="tool-card" id="toolLibrary"><span class="tool-icon blue">▤</span><b>Biblioteca</b><small>Archivos importados en esta sesión</small><span class="arrow">↗</span></button></div>
+      <header class="topbar">
+        <div class="mobile-brand"><span class="brand-mark">IPA</span><b>IPA CENTER</b></div>
+        <span class="top-tag">APP LIBRARY <i></i></span>
+      </header>
+
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">TU BIBLIOTECA DE APPS</div>
+          <h1>Todo tu contenido<br><span>IPA en un solo lugar.</span></h1>
+          <p>Importa un archivo desde Archivos en tu iPhone o desde tu ordenador para consultar la información del paquete.</p>
+          <button class="primary-btn" id="hero-import"><span>＋</span> Importar archivo IPA</button>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orb orb-one"></div><div class="orb orb-two"></div>
+          <div class="app-tile"><div class="tile-symbol">IPA</div><div class="tile-line"></div><div class="tile-line short"></div></div>
+          <div class="floating-chip">.IPA</div>
+        </div>
       </section>
-      <section id="analyzer" class="view hidden">
-        <div class="section-head"><div><span class="eyebrow">LOCAL INSPECTION</span><h2>Importar paquete</h2><p class="muted">Selecciona un archivo IPA o APK desde tu dispositivo.</p></div></div>
-        <label class="dropzone" id="dropzone"><input type="file" id="fileInput" accept=".ipa,.apk,.zip" hidden /><span class="upload-icon">⇧</span><b>Arrastra tu archivo aquí</b><span>o pulsa para buscar en tu dispositivo</span><small>Formatos admitidos: .IPA · .APK · .ZIP</small></label>
-        <div id="result" class="result hidden"></div>
-        <div class="notice"><b>Sobre el análisis</b><p>IPA y APK son contenedores ZIP. Esta herramienta puede listar su contenido y leer ciertos metadatos. No verifica firmas criptográficas, no certifica que un archivo sea seguro y no instala aplicaciones.</p></div>
+
+      <section class="library-section" id="library-section">
+        <div class="section-heading">
+          <div><div class="eyebrow">COLECCIÓN PERSONAL</div><h2>Mis aplicaciones <span id="app-count">0</span></h2></div>
+          <button class="secondary-btn" id="small-import">＋ Importar</button>
+        </div>
+        <div id="empty-state" class="empty-state">
+          <div class="empty-icon">⇧</div>
+          <h3>Tu biblioteca está vacía</h3>
+          <p>Selecciona un archivo .ipa para empezar. En iPhone se abrirá el selector de la app Archivos.</p>
+          <button class="secondary-btn" id="empty-import">Seleccionar archivo</button>
+        </div>
+        <div id="app-grid" class="app-grid"></div>
       </section>
-      <section id="library" class="view hidden">
-        <div class="section-head"><div><span class="eyebrow">SESSION FILES</span><h2>Mi biblioteca</h2><p class="muted">Los registros se mantienen solo mientras esta pestaña esté abierta.</p></div><button class="secondary" id="libraryUpload">＋ Importar</button></div>
-        <div id="libraryList" class="empty">Todavía no has importado ningún paquete.</div>
+
+      <section class="import-panel" id="import-panel">
+        <div class="section-heading"><div><div class="eyebrow">IMPORTACIÓN LOCAL</div><h2>Importar aplicación</h2></div></div>
+        <label class="dropzone" id="dropzone" for="ipa-input">
+          <div class="upload-icon">⇧</div>
+          <strong>Selecciona tu archivo IPA</strong>
+          <span>En iPhone, toca aquí y elige el archivo desde Archivos</span>
+          <em>Compatible con archivos .ipa</em>
+          <span class="choose-btn">Elegir archivo</span>
+          <input id="ipa-input" type="file" accept=".ipa,application/octet-stream">
+        </label>
+        <p class="privacy-note"><span>●</span> El análisis se realiza en este navegador. El archivo no se carga a IPA CENTER ni a Render.</p>
+        <div class="result-card" id="result-card" hidden></div>
       </section>
-      <footer>IPA CENTER <span>Herramienta de inspección local · No afiliada a Apple ni Google</span></footer>
+
+      <footer>IPA CENTER <span>·</span> Importación y análisis local de paquetes</footer>
     </main>
   </div>
   <script type="module" src="/src/main.js"></script>

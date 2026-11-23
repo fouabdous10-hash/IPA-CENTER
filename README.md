@@ -1,24 +1,22 @@
 # IPA CENTER
 
-Proyecto local para inspeccionar paquetes IPA y APK.
+IPA CENTER es una interfaz web para importar y consultar archivos IPA localmente.
 
-## Requisitos
-- Windows 10/11
-- Node.js LTS y npm
-- Conexión a Internet la primera vez para descargar dependencias
+## Desarrollo
+1. Instala Node.js LTS.
+2. Ejecuta `npm install`.
+3. Ejecuta `npm run dev`.
 
-## Iniciar
-1. Extrae el ZIP completo.
-2. Ejecuta `startergui.bat`.
-3. El script instala dependencias si faltan, inicia Vite y abre `http://localhost:5173` en el navegador predeterminado (si quieres Chrome, configúralo como navegador predeterminado).
+## Publicación en Render
+- Tipo: Static Site
+- Build Command: `npm install && npm run build`
+- Publish Directory: `dist`
+- Root Directory: vacío
 
-## Móvil
-La interfaz es responsive para iPhone y Android. Para abrirla desde un móvil en la misma Wi-Fi, ejecuta el proyecto en el PC y visita `http://IP-LOCAL-DEL-PC:5173`. Esto es HTTP local, no HTTPS público. No publiques el servidor directamente en Internet.
+## Importación
+El archivo se procesa en el navegador con JSZip. No se envía a un servidor.
+La app puede mostrar metadatos simples del Info.plist cuando está en formato XML.
+Los Info.plist binarios no se decodifican en esta versión.
 
 ## Límites importantes
-- El navegador no puede instalar IPA/APK por sí solo.
-- La web no firma aplicaciones, no elimina protecciones, no evade controles de Apple/Google.
-- El análisis ZIP es orientativo y no es un antivirus ni una verificación criptográfica.
-- IPA: intenta leer `Payload/*.app/Info.plist` cuando está en XML. Los plists binarios no se decodifican en esta versión.
-- APK: lista el contenido; no interpreta el manifiesto Android binario.
-- Los archivos se procesan localmente en la pestaña; no se envían a un backend propio.
+Importar o descargar un IPA no lo instala en iOS. Esta herramienta no firma aplicaciones, no valida certificados criptográficos, no elude las protecciones de Apple y no garantiza compatibilidad. La instalación requiere un método autorizado y una firma válida.

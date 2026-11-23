@@ -1,64 +1,125 @@
-import JSZip from 'jszip';
-import plist from 'plist';
+import JSZip from "jszip";
+import "./style.css";
 
-const $ = (s) => document.querySelector(s);
-const state = { files: [] };
-const input = $('#fileInput');
-const result = $('#result');
+const input = document.querySelector("#ipa-input");
+const importPanel = document.querySelector("#import-panel");
+const librarySection = document.querySelector("#library-section");
+const resultCard = document.querySelector("#result-card");
+const emptyState = document.querySelector("#empty-state");
+const appGrid = document.querySelector("#app-grid");
+const appCount = document.querySelector("#app-count");
+const dropzone = document.querySelector("#dropzone");
 
-function navigate(view) {
-  document.querySelectorAll('.view').forEach(v => v.classList.toggle('hidden', v.id !== view));
-  document.querySelectorAll('.nav').forEach(b => b.classList.toggle('active', b.dataset.view === view));
-  $('#page-title').textContent = ({dashboard:'Panel principal',analyzer:'Analizador',library:'Mi biblioteca'})[view];
+const apps = [];
+
+function openPicker() {
+  input.click();
 }
-document.querySelectorAll('.nav').forEach(b => b.addEventListener('click',()=>navigate(b.dataset.view)));
-$('#heroUpload').onclick = () => { navigate('analyzer'); input.click(); };
-$('#toolIpa').onclick = () => { navigate('analyzer'); input.click(); };
-$('#toolApk').onclick = () => { navigate('analyzer'); input.click(); };
-$('#toolLibrary').onclick = () => navigate('library');
-$('#libraryUpload').onclick = () => { navigate('analyzer'); input.click(); };
-$('#themeBtn').onclick = () => document.body.classList.toggle('light');
-$('#dropzone').onclick = (e) => { if(e.target !== input) input.click(); };
-$('#dropzone').addEventListener('dragover',e=>{e.preventDefault();$('#dropzone').style.borderColor='#a99aff';});
-$('#dropzone').addEventListener('dragleave',()=>$('#dropzone').style.borderColor='');
-$('#dropzone').addEventListener('drop',e=>{e.preventDefault();$('#dropzone').style.borderColor='';const f=e.dataTransfer.files[0];if(f) inspect(f);});
-input.addEventListener('change',()=>{if(input.files[0]) inspect(input.files[0]);input.value='';});
+["hero-import", "small-import", "empty-import", "nav-import"].forEach(id => {
+  document.getElementById(id).addEventListener("click", () => {
+    importPanel.classList.add("visible");
+    librarySection.scrollIntoView({ behavior: "smooth", block: "start" });
+    openPicker();
+  });
+});
+document.getElementById("nav-library").addEventListener("click", () => {
+  importPanel.classList.remove("visible");
+  librarySection.scrollIntoView({ behavior: "smooth" });
+});
+dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.classList.add("dragover"); });
+dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+dropzone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropzone.classList.remove("dragover");
+  const file = [...e.dataTransfer.files].find(f => f.name.toLowerCase().endsWith(".ipa"));
+  if (file) inspectIPA(file);
+  else showError("Selecciona un archivo con extensión .ipa.");
+});
+input.addEventListener("change", () => {
+  const file = input.files?.[0];
+  if (file) inspectIPA(file);
+  input.value = "";
+});
 
-function esc(v){return String(v??'No disponible').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function size(n){if(n<1024)return n+' B';if(n<1048576)return (n/1024).toFixed(1)+' KB';return (n/1048576).toFixed(2)+' MB';}
-async function inspect(file){
-  const ext=file.name.split('.').pop().toLowerCase();
-  if(!['ipa','apk','zip'].includes(ext)){alert('Formato no admitido. Selecciona un archivo IPA o APK.');return;}
-  result.classList.remove('hidden');result.innerHTML='<p>Analizando el contenido localmente…</p>';
-  try{
-    const zip=await JSZip.loadAsync(file);
-    const names=Object.keys(zip.files).filter(n=>!zip.files[n].dir);
-    let metadata={};
-    if(ext==='ipa'){
-      const plistName=names.find(n=>/^Payload\/[^/]+\.app\/Info\.plist$/i.test(n));
-      if(plistName){
-        const raw=await zip.files[plistName].async('uint8array');
-        const text=new TextDecoder().decode(raw);
-        if(text.trim().startsWith('<?xml')||text.trim().startsWith('<!DOCTYPE')||text.trim().startsWith('<plist')) {
-          const p=plist.parse(text);
-          metadata={'Nombre visible':p.CFBundleDisplayName||p.CFBundleName,'Identificador':p.CFBundleIdentifier,'Versión':p.CFBundleShortVersionString,'Build':p.CFBundleVersion,'Versión mínima iOS':p.MinimumOSVersion};
-        } else metadata['Info.plist']='Encontrado en formato binario; lectura no disponible en esta versión.';
-      } else metadata['Info.plist']='No encontrado en la ruta habitual.';
-    } else if(ext==='apk'){
-      metadata['Tipo']='Paquete Android (APK)';
-      metadata['Manifest']='AndroidManifest.xml encontrado: '+names.some(n=>n==='AndroidManifest.xml');
-      metadata['Nota']='El manifiesto Android suele estar en formato binario; esta versión no extrae aún nombre, versión ni permisos.';
+function xmlValue(xml, key) {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = xml.match(new RegExp(`<key>\\s*${escaped}\\s*</key>\\s*<(?:string|integer)>\\s*([^<]*)`, "i"));
+  return match ? match[1].trim() : "";
+}
+
+async function inspectIPA(file) {
+  resultCard.hidden = false;
+  resultCard.innerHTML = `<div class="loading"><span class="spinner"></span><div><b>Analizando ${escapeHTML(file.name)}</b><small>Leyendo el contenido localmente…</small></div></div>`;
+  try {
+    const zip = await JSZip.loadAsync(file);
+    const entries = Object.keys(zip.files).filter(name => !zip.files[name].dir);
+    const plistPath = entries.find(name => /^Payload\/[^/]+\.app\/Info\.plist$/i.test(name));
+    let bundleName = file.name.replace(/\.ipa$/i, "");
+    let version = "No disponible";
+    let bundleId = "No disponible";
+    let iconPath = "";
+    let plistReadable = false;
+
+    if (plistPath) {
+      const plistText = await zip.file(plistPath).async("string");
+      if (plistText.includes("<plist") && plistText.includes("<dict>")) {
+        plistReadable = true;
+        bundleName = xmlValue(plistText, "CFBundleDisplayName") || xmlValue(plistText, "CFBundleName") || bundleName;
+        version = xmlValue(plistText, "CFBundleShortVersionString") || xmlValue(plistText, "CFBundleVersion") || version;
+        bundleId = xmlValue(plistText, "CFBundleIdentifier") || bundleId;
+        const iconEntry = entries.find(name => /^Payload\/[^/]+\.app\/(AppIcon[^/]*\.(png|jpg)|[^/]*Icon[^/]*\.png)$/i.test(name));
+        if (iconEntry) iconPath = iconEntry;
+      }
     }
-    const entry={name:file.name,ext,size:file.size,items:names.length,metadata};
-    state.files.unshift(entry);$('#count').textContent=state.files.length;renderLibrary();
-    const rows=Object.entries(metadata).map(([k,v])=>`<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('');
-    const listing=names.slice(0,100).map(n=>`<div class="file-row">${esc(n)}</div>`).join('');
-    result.innerHTML=`<h3>✓ Análisis completado</h3><div class="meta"><div><small>ARCHIVO</small><b>${esc(file.name)}</b></div><div><small>FORMATO</small><b>${ext.toUpperCase()}</b></div><div><small>TAMAÑO</small><b>${size(file.size)}</b></div><div><small>ELEMENTOS</small><b>${names.length}</b></div>${rows}</div><div class="file-list"><b>Contenido del paquete (máximo 100 elementos mostrados)</b>${listing}</div><div class="notice"><b>Resultado informativo, no certificado de seguridad</b><p>Este análisis solo inspecciona la estructura ZIP y metadatos disponibles. No verifica la firma, no detecta todo el malware y no confirma compatibilidad ni posibilidad de instalación.</p></div>`;
-  }catch(err){result.innerHTML='<h3>No se pudo leer el paquete</h3><p class="muted">El archivo puede estar dañado, cifrado o no ser un ZIP válido.</p>';}
+
+    const payloadPresent = entries.some(name => /^Payload\/[^/]+\.app\//i.test(name));
+    const signaturePresent = entries.some(name => /^Payload\/[^/]+\.app\/_CodeSignature\/CodeResources$/i.test(name));
+    const record = { file, name: bundleName, version, bundleId, entries: entries.length, payloadPresent, signaturePresent, plistReadable, iconPath, zip };
+    apps.unshift(record);
+    renderLibrary();
+    renderResult(record);
+  } catch (err) {
+    showError("No se ha podido leer este archivo como un paquete ZIP/IPA válido. Comprueba que la descarga esté completa.");
+  }
 }
-function renderLibrary(){
- const el=$('#libraryList');
- if(!state.files.length){el.className='empty';el.textContent='Todavía no has importado ningún paquete.';return;}
- el.className='';
- el.innerHTML=state.files.map(f=>`<div class="result" style="margin:10px 0"><b>${esc(f.name)}</b><p class="muted">${f.ext.toUpperCase()} · ${size(f.size)} · ${f.items} elementos</p></div>`).join('');
+
+function renderResult(app) {
+  resultCard.hidden = false;
+  resultCard.innerHTML = `
+    <div class="result-top"><div><div class="eyebrow">IMPORTACIÓN COMPLETADA</div><h3>${escapeHTML(app.name)}</h3><small>${escapeHTML(app.file.name)}</small></div><span class="success-pill">Importado</span></div>
+    <div class="details-grid">
+      <div><small>Versión</small><b>${escapeHTML(app.version)}</b></div>
+      <div><small>Identificador</small><b>${escapeHTML(app.bundleId)}</b></div>
+      <div><small>Archivos leídos</small><b>${app.entries.toLocaleString("es-ES")}</b></div>
+      <div><small>Estructura Payload</small><b>${app.payloadPresent ? "Detectada" : "No detectada"}</b></div>
+    </div>
+    <div class="notice"><b>Importante sobre la instalación</b><p>La importación solo permite consultar y descargar el archivo. La presencia de archivos de firma no demuestra que la firma sea válida ni que la app sea compatible o instalable en tu iPhone.</p></div>
+    <button class="primary-btn download-btn" id="download-original">↓ Descargar IPA original</button>
+  `;
+  document.getElementById("download-original").addEventListener("click", () => {
+    const url = URL.createObjectURL(app.file);
+    const a = document.createElement("a");
+    a.href = url; a.download = app.file.name; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  });
+}
+
+function renderLibrary() {
+  appCount.textContent = apps.length;
+  emptyState.hidden = apps.length > 0;
+  appGrid.innerHTML = apps.map((app, index) => `
+    <article class="app-card">
+      <div class="app-icon">${escapeHTML((app.name || "IPA").slice(0, 3).toUpperCase())}</div>
+      <div class="app-card-info"><b>${escapeHTML(app.name)}</b><small>${escapeHTML(app.version)} · IPA</small></div>
+      <button class="more-btn" data-index="${index}" aria-label="Ver detalles">···</button>
+    </article>`).join("");
+  appGrid.querySelectorAll(".more-btn").forEach(button => button.addEventListener("click", () => renderResult(apps[Number(button.dataset.index)])));
+}
+
+function showError(message) {
+  resultCard.hidden = false;
+  resultCard.innerHTML = `<div class="error-message"><b>No se pudo importar</b><p>${escapeHTML(message)}</p></div>`;
+}
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
 }
