@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#100d1d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IPA CENTER">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icon.svg">
+  <title>IPA CENTER</title>
+  <script type="module" crossorigin src="/assets/index-DvI5aRJy.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BlDqNpR-.css">
+</head>
+<body>
+  <div id="app">
+    <header class="top"><div class="brand"><div class="logo">IPA</div><div><b>IPA CENTER</b><small>IPA library & checker</small></div></div><span class="pill">iOS tools</span></header>
+    <main>
+      <section class="hero">
+        <span class="eyebrow">YOUR APP LIBRARY</span>
+        <h1>Importa y comprueba<br><span>tus archivos IPA</span></h1>
+        <p>Analiza la estructura del archivo y consulta los datos de la aplicación antes de intentar instalarla.</p>
+        <label class="upload" for="ipaFile"><span class="plus">＋</span><strong>Importar archivo IPA</strong><small>Selecciona un archivo .ipa desde Archivos</small></label>
+        <input id="ipaFile" type="file" accept=".ipa,application/octet-stream" hidden>
+      </section>
+      <section id="result" class="panel empty"><div class="empty-icon">⌁</div><h2>Tu biblioteca está vacía</h2><p>Importa un IPA para ver sus datos y comprobaciones.</p></section>
+      <section class="notice"><b>Importante sobre la instalación</b><p>Importar o descargar un IPA no instala la aplicación. La presencia de archivos de firma tampoco demuestra que la firma sea válida. iOS requiere una firma válida y un método de distribución autorizado. Esta web no firma aplicaciones ni evita las protecciones de Apple.</p></section>
+      <section class="install-help"><h3>¿Quieres poner IPA CENTER en tu pantalla de inicio?</h3><p>En Safari, pulsa Compartir → Añadir a pantalla de inicio.</p></section>
+    </main>
+    <footer>IPA CENTER · Análisis local en tu navegador</footer>
+  </div>
+</body>
+</html>

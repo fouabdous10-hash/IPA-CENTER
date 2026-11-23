@@ -1,0 +1,9 @@
+{
+  "name": "IPA CENTER",
+  "short_name": "IPA CENTER",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#100d1d",
+  "theme_color": "#100d1d",
+  "icons": [{"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+}
