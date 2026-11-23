@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#090d18" />
+  <meta name="description" content="IPA CENTER - Analizador local de paquetes IPA y APK." />
+  <title>IPA CENTER — App Package Manager</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-mark">⬡</span><span>IPA <b>CENTER</b><small>APP PACKAGE MANAGER</small></span></a>
+      <div class="nav-label">WORKSPACE</div>
+      <button class="nav active" data-view="dashboard">▦ <span>Panel principal</span></button>
+      <button class="nav" data-view="analyzer">⌕ <span>Analizador</span></button>
+      <button class="nav" data-view="library">▤ <span>Mi biblioteca</span></button>
+      <div class="side-note"><span class="dot"></span> Procesamiento local<br><small>Tus archivos no se suben a un servidor.</small></div>
+      <div class="side-bottom">IPA CENTER <span>v1.0.0</span></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><span class="eyebrow">APP MANAGEMENT / HOME</span><h1 id="page-title">Panel principal</h1></div><div class="top-right"><span class="secure">◈ Procesamiento en tu dispositivo</span><button class="icon-btn" id="themeBtn" title="Cambiar tema">◐</button></div></header>
+      <section id="dashboard" class="view">
+        <div class="hero"><div class="hero-copy"><span class="pill">PLATAFORMA MULTIDISPOSITIVO</span><h2>Gestiona tus paquetes.<br><em>Conoce lo que instalas.</em></h2><p>Importa paquetes IPA de iOS o APK de Android para inspeccionar su estructura y consultar los metadatos disponibles.</p><button class="primary" id="heroUpload">＋ Importar archivo</button></div><div class="hero-art"><div class="orb"></div><div class="file-card"><span>▧</span><b>APP PACKAGE</b><small>IPA · APK</small><strong>◎</strong></div></div></div>
+        <div class="stats"><article><span>FORMATOS</span><b>02</b><small>IPA y APK</small></article><article><span>ARCHIVOS ANALIZADOS</span><b id="count">0</b><small>En esta sesión</small></article><article><span>ALMACENAMIENTO</span><b>LOCAL</b><small>Sin subir archivos</small></article></div>
+        <div class="section-head"><div><span class="eyebrow">GET STARTED</span><h2>Herramientas</h2></div></div>
+        <div class="tool-grid"><button class="tool-card" id="toolIpa"><span class="tool-icon purple"></span><b>Analizar IPA</b><small>Paquetes de aplicaciones iOS</small><span class="arrow">↗</span></button><button class="tool-card" id="toolApk"><span class="tool-icon green">▣</span><b>Analizar APK</b><small>Paquetes de aplicaciones Android</small><span class="arrow">↗</span></button><button class="tool-card" id="toolLibrary"><span class="tool-icon blue">▤</span><b>Biblioteca</b><small>Archivos importados en esta sesión</small><span class="arrow">↗</span></button></div>
+      </section>
+      <section id="analyzer" class="view hidden">
+        <div class="section-head"><div><span class="eyebrow">LOCAL INSPECTION</span><h2>Importar paquete</h2><p class="muted">Selecciona un archivo IPA o APK desde tu dispositivo.</p></div></div>
+        <label class="dropzone" id="dropzone"><input type="file" id="fileInput" accept=".ipa,.apk,.zip" hidden /><span class="upload-icon">⇧</span><b>Arrastra tu archivo aquí</b><span>o pulsa para buscar en tu dispositivo</span><small>Formatos admitidos: .IPA · .APK · .ZIP</small></label>
+        <div id="result" class="result hidden"></div>
+        <div class="notice"><b>Sobre el análisis</b><p>IPA y APK son contenedores ZIP. Esta herramienta puede listar su contenido y leer ciertos metadatos. No verifica firmas criptográficas, no certifica que un archivo sea seguro y no instala aplicaciones.</p></div>
+      </section>
+      <section id="library" class="view hidden">
+        <div class="section-head"><div><span class="eyebrow">SESSION FILES</span><h2>Mi biblioteca</h2><p class="muted">Los registros se mantienen solo mientras esta pestaña esté abierta.</p></div><button class="secondary" id="libraryUpload">＋ Importar</button></div>
+        <div id="libraryList" class="empty">Todavía no has importado ningún paquete.</div>
+      </section>
+      <footer>IPA CENTER <span>Herramienta de inspección local · No afiliada a Apple ni Google</span></footer>
+    </main>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
